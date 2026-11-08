@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scream Club — Live System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #07060a;
+      --surface:   #0f0e14;
+      --card:      #141219;
+      --border:    #2a2535;
+      --gold:      #e8a020;
+      --gold-dim:  #7a5010;
+      --amber:     #f97316;
+      --blue:      #4f8ef7;
+      --violet:    #8b5cf6;
+      --green:     #16c784;
+      --red:       #f05d5d;
+      --text:      #ede9f4;
+      --muted:     #7b7490;
+      --faint:     #2e2940;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background texture ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 15% 10%, rgba(232,160,32,.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 90%, rgba(79,142,247,.06) 0%, transparent 55%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 36px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,9,15,.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo-area { display: flex; align-items: baseline; gap: 14px; }
+
+    .logo-main {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.85rem;
+      font-weight: 900;
+      letter-spacing: -.5px;
+      color: var(--gold);
+      text-shadow: 0 0 30px rgba(232,160,32,.45);
+    }
+
+    .logo-sub {
+      font-size: .78rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      color: var(--muted);
+    }
+
+    .header-badges { display: flex; gap: 10px; align-items: center; }
+
+    .badge {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid;
+    }
+
+    .badge-live { color: var(--green); border-color: var(--green); background: rgba(22,199,132,.1); }
+    .badge-solwezi { color: var(--muted); border-color: var(--border); }
+
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green);
+      display: inline-block; margin-right: 5px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(22,199,132,.5); }
+      50%      { opacity:.7; box-shadow: 0 0 0 6px rgba(22,199,132,0); }
+    }
+
+    /* ── NAV TABS ── */
+    .nav-tabs {
+      display: flex; gap: 0;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,9,15,.6);
+      padding: 0 36px;
+      position: relative; z-index: 9;
+    }
+
+    .nav-tab {
+      padding: 14px 22px;
+      font-size: .85rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .2s;
+      text-decoration: none;
+    }
+
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ── MAIN GRID ── */
+    .workspace {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 0;
+      max-width: 1700px;
+      margin: 0 auto;
+      min-height: calc(100vh - 120px);
+    }
+
+    @media (max-width: 1050px) {
+      .workspace { grid-template-columns: 1fr; }
+      header { padding: 18px 20px; }
+      .nav-tabs { padding: 0 20px; }
+    }
+
+    /* ── COLUMN WRAPPERS ── */
+    .col {
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .col-customer { border-right: 1px solid var(--border); }
+
+    .col-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .72rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 6px 14px; border-radius: 99px;
+      margin-bottom: 6px;
+    }
+
+    .col-label.customer { background: rgba(79,142,247,.12); color: var(--blue); border: 1px solid rgba(79,142,247,.3); }
+    .col-label.admin    { background: rgba(232,160,32,.1);  color: var(--gold); border: 1px solid rgba(232,160,32,.25); }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+    }
+
+    .card-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 9px;
+      color: var(--text);
+    }
+
+    .card-title .icon { font-size: 1.1rem; }
+
+    /* ── FORM ELEMENTS ── */
+    .field { margin-bottom: 14px; }
+
+    .field label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      padding: 11px 14px;
+      font-size: .93rem;
+      font-family: 'DM Sans', sans-serif;
+      transition: border-color .2s;
+      appearance: none;
+    }
+
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--gold-dim);
+      box-shadow: 0 0 0 3px rgba(232,160,32,.1);
+    }
+
+    /* ── MENU GRID ── */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .menu-item {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 12px;
+      cursor: pointer;
+      transition: all .18s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .menu-item::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(232,160,32,.12), transparent 70%);
+      opacity: 0; transition: opacity .2s;
+    }
+
+    .menu-item:hover { border-color: #3d3650; transform: translateY(-1px); }
+    .menu-item:hover::after { opacity: 1; }
+
+    .menu-item.selected {
+      border-color: var(--gold);
+      background: rgba(232,160,32,.08);
+      box-shadow: 0 0 18px rgba(232,160,32,.12);
+    }
+
+    .menu-item.selected::after { opacity: 1; }
+
+    .item-name {
+      font-size: .9rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .item-tag {
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .tag-drink { background: rgba(79,142,247,.15); color: var(--blue); }
+    .tag-food  { background: rgba(249,115,22,.15);  color: var(--amber); }
+
+    .item-price {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: var(--gold);
+    }
+
+    .check-icon {
+      position: absolute; top: 10px; right: 10px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--gold);
+      display: none; align-items: center; justify-content: center;
+      font-size: .65rem; color: #000;
+    }
+
+    .menu-item.selected .check-icon { display: flex; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      width: 100%;
+      padding: 13px 20px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .93rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      letter-spacing: .3px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #e8a020, #c47c10);
+      color: #000;
+      box-shadow: 0 4px 16px rgba(232,160,32,.25);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(232,160,32,.35); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-blue {
+      background: linear-gradient(135deg, #4f8ef7, #2c66d4);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(79,142,247,.2);
+    }
+    .btn-blue:hover { transform: translateY(-1px); }
+
+    .btn-violet {
+      background: linear-gradient(135deg, #8b5cf6, #6d35d4);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(139,92,246,.2);
+    }
+    .btn-violet:hover { transform: translateY(-1px); }
+
+    .btn-sm {
+      width: auto;
+      padding: 6px 14px;
+      font-size: .78rem;
+      border-radius: 7px;
+    }
+
+    .btn-green { background: var(--green); color: #000; }
+    .btn-gold-outline { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
+    .btn-gold-outline:hover { background: rgba(232,160,32,.08); }
+
+    /* ── ORDER FEED ── */
+    .feed-list {
+      list-style: none;
+      max-height: 290px;
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .feed-list::-webkit-scrollbar { width: 4px; }
+    .feed-list::-webkit-scrollbar-track { background: transparent; }
+    .feed-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .feed-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      animation: slideIn .3s ease;
+      border-left: 3px solid var(--border);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .feed-item.drink { border-left-color: var(--blue); }
+    .feed-item.food  { border-left-color: var(--amber); }
+    .feed-item.music { border-left-color: var(--violet); }
+
+    .feed-meta { font-size: .88rem; line-height: 1.5; }
+    .feed-meta strong { color: var(--text); }
+    .feed-meta small { color: var(--muted); font-size: .75rem; }
+
+    .method-tag {
+      font-size: .68rem;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .method-tab  { background: rgba(245,93,93,.12); color: var(--red); }
+    .method-paid { background: rgba(22,199,132,.12); color: var(--green); }
+
+    /* ── BALANCE TABLE ── */
+    .ledger-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+    }
+
+    .ledger-table th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: .7rem;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ledger-table td {
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(42,37,53,.7);
+    }
+
+    .ledger-table tr:last-child td { border-bottom: none; }
+
+    .balance-pill {
+      font-family: 'DM Mono', monospace;
+      font-size: .9rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    .balance-owed    { background: rgba(240,93,93,.12); color: var(--red); }
+    .balance-cleared { background: rgba(22,199,132,.1); color: var(--green); }
+
+    /* ── SUMMARY BAR ── */
+    .summary-bar {
+      display: flex; gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+    }
+
+    .summary-stat {
+      flex: 1;
+      text-align: center;
+    }
+
+    .summary-stat .val {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--gold);
+    }
+
+    .summary-stat .lbl {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .summary-divider {
+      width: 1px;
+      background: var(--border);
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      padding: 28px 0;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+    .empty .icon { font-size: 2rem; display: block; margin-bottom: 8px; opacity: .4; }
+
+    /* ── TOAST NOTIFICATION ── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--card);
+      border: 1px solid var(--gold);
+      border-radius: 10px;
+      padding: 12px 22px;
+      font-size: .88rem;
+      font-weight: 500;
+      color: var(--text);
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      opacity: 0;
+      transition: all .3s ease;
+      z-index: 999;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── FOOTER LINK ── */
+    .page-link {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: .8rem; font-weight: 600;
+      color: var(--gold);
+      text-decoration: none;
+      padding: 8px 16px;
+      border: 1px solid rgba(232,160,32,.3);
+      border-radius: 8px;
+      transition: all .2s;
+    }
+    .page-link:hover { background: rgba(232,160,32,.08); }
+
+    .footer-nav {
+      position: relative; z-index: 2;
+      padding: 18px 36px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .8rem; color: var(--muted);
+    }
+
+    /* ── SECTION SEPARATOR ── */
+    .section-sep {
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin: 2px 0 -4px;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- ════════════ HEADER ════════════ -->
+<header>
+  <div class="logo-area">
+    <span class="logo-main">Scream Club</span>
+    <span class="logo-sub">Nightclub</span>
+  </div>
+  <div class="header-badges">
+    <span class="badge badge-live"><span class="live-dot"></span>Live System</span>
+    <span class="badge badge-solwezi">v2.0</span>
+  </div>
+</header>
+
+<!-- ════════════ NAV ════════════ -->
+<nav class="nav-tabs">
+  <span class="nav-tab active">📱 Customer & Operations</span>
+  <a class="nav-tab" href="screamkitchen.html">🍳 Kitchen & Staff Portal →</a>
+  <a class="nav-tab" href="admin.html">🔐 Admin Control →</a>
+  <a class="nav-tab" href="dj.html">🎧 DJ Booth →</a>
+</nav>
+
+<!-- ════════════ WORKSPACE ════════════ -->
+<div class="workspace">
+
+  <!-- ════ LEFT: CUSTOMER SIDE ════ -->
+  <div class="col col-customer">
+    <span class="col-label customer">📱 Customer Interface — QR Web App</span>
+
+    <!-- Table Check-In -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📍</span> Table Check-In</div>
+      <div class="field">
+        <label>Your Table</label>
+        <select id="custTable">
+          <option value="Table 1">Table 1 — Front Stage</option>
+          <option value="Table 2">Table 2 — VIP Lounge</option>
+          <option value="Table 3">Table 3 — Bar Area</option>
+          <option value="Table 4">Table 4 — Garden Exterior</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Your Name (optional)</label>
+        <input type="text" id="guestName" maxlength="24" placeholder="e.g. Chanda" oninput="try{localStorage.setItem('scream_guest',this.value)}catch{}" />
+      </div>
+    </div>
+
+    <!-- Order Panel -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🍽️</span> Order Instantly</div>
+
+      <div class="menu-grid" id="menuGrid"></div>
+
+      <!-- Cart summary -->
+      <div id="cartSummary" style="display:none; margin-bottom:12px; padding:10px 14px; background:rgba(232,160,32,.07); border:1px solid rgba(232,160,32,.2); border-radius:9px; font-size:.85rem;">
+        <span style="color:var(--muted);">Cart:</span>
+        <span id="cartLabel" style="color:var(--gold); font-weight:600; margin-left:6px;"></span>
+        <span id="cartTotal" style="float:right; font-family:'DM Mono',monospace; color:var(--gold);"></span>
+      </div>
+
+      <div class="field">
+        <label>Payment Method</label>
+        <select id="custPayment">
+          <option value="tab">Add to Tab — Pay on Departure</option>
+          <option value="momo">MTN MoMo / Airtel Money — Pay Now</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="placeOrder()">🚀 Send Order to Kitchen</button>
+    </div>
+
+    <!-- DJ Request -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🎵</span> Song Request to Stage DJ</div>
+      <div class="field">
+        <div id="nowPlaying" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:9px;font-size:.85rem;"></div>
+      <label>Track & Artist Name</label>
+        <input type="text" id="songInput" maxlength="80" placeholder="e.g. Yo Maps — Confirmation" />
+      </div>
+      <div class="field">
+        <label>Type of Music</label>
+        <select id="songGenre"><option>Any</option><option>Zambian</option><option>Amapiano</option><option>Afrobeats</option><option>Hip-Hop</option><option>R&B</option><option>House</option><option>Reggae / Dancehall</option><option>Gospel</option><option>Old School</option></select>
+      </div>
+      <button class="btn btn-violet" onclick="sendSongRequest()">🎧 Send to DJ Booth</button>
+    </div>
+
+  </div>
+
+  <!-- ════ RIGHT: ADMIN SIDE ════ -->
+  <div class="col col-admin">
+    <span class="col-label admin">📊 Management & Staff Dashboard</span>
+
+    <!-- Live stats summary -->
+    <div class="summary-bar" id="summaryBar">
+      <div class="summary-stat">
+        <div class="val" id="statOrders">0</div>
+        <div class="lbl">Orders Today</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="val" id="statOwed">K835</div>
+        <div class="lbl">Total Owed</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-stat">
+        <div class="val" id="statRequests">0</div>
+        <div class="lbl">DJ Requests</div>
+      </div>
+    </div>
+
+    <!-- Dispatch Feed -->
+    <div class="card">
+      <div class="card-title"><span class="icon">⚡</span> Live Order Dispatch</div>
+      <ul class="feed-list" id="orderFeed">
+        <li class="feed-item drink">
+          <div class="feed-meta">
+            <strong>Table 2</strong> — Jameson Shot
+            <br><small><span class="method-tag method-paid">MoMo Prepaid</span></small>
+          </div>
+          <button class="btn btn-sm btn-green" onclick="this.closest('li').remove()">Dispatch</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Balance Ledger -->
+    <div class="card">
+      <div class="card-title"><span class="icon">💰</span> Outstanding Balances</div>
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Balance</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="ledgerBody"></tbody>
+      </table>
+    </div>
+
+    <!-- DJ Queue -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🎧</span> DJ Booth — Request Queue</div>
+      <ul class="feed-list" id="djFeed">
+        <div class="empty"><span class="icon">🎵</span>No requests yet — queue is empty</div>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════ FOOTER ════════════ -->
+<footer class="footer-nav">
+  <span>Scream Club Interactive System &nbsp;
+    <button class="reset-btn" onclick="resetAllData()">🗑 Reset All Data</button>
+  </span>
+  <a href="screamkitchen.html" class="page-link">🍳 Open Kitchen & Staff Portal →</a>
+</footer>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  // ════════════════════════════════════════════
+  //  SCREAM CLUB SYSTEM — localStorage Persistence
+  //  All state auto-saves on every change and
+  //  restores when the page is reopened.
+  // ════════════════════════════════════════════
+
+  const KEYS = {
+    balances:  'scream_balances',
+    orders:    'scream_orders',      // array of order objects
+    djQueue:   'scream_djqueue',     // array of { song, table }
+    stats:     'scream_stats',       // { totalOrders, totalRequests }
+  };
+
+  // ── Load / Save helpers ──
+  function load(key, fallback) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+  }
+  function save(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+
+  // ── State (restored from storage or defaults) ──
+  const balances = load(KEYS.balances, { "Table 1": 0, "Table 2": 245, "Table 3": 0, "Table 4": 590 });
+  let orders     = load(KEYS.orders,   []);   // [{ table, name, cat, method, time }]
+  let djQueue    = load(KEYS.djQueue,  []);   // [{ song, table }]
+  let stats      = load(KEYS.stats,    { totalOrders: 0, totalRequests: 0 });
+  let cart = [];
+
+  // ── Menu (managed from Admin page; sold-out items are locked) ──
+  const DEFAULT_MENU = [{name:'Mosi Lager',price:40,cat:'Drink',available:true},{name:'T-Bone Steak',price:180,cat:'Food',available:true},{name:'Jameson Shot',price:65,cat:'Drink',available:true},{name:'Wings Basket',price:150,cat:'Food',available:true},{name:'Smirnoff & Coke',price:55,cat:'Drink',available:true},{name:'Chicken & Chips',price:130,cat:'Food',available:true}];
+  let menu = load('scream_menu', DEFAULT_MENU);
+  function esc(t){ return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function renderMenu() {
+    document.getElementById('menuGrid').innerHTML = menu.map((m,i) => `
+      <div class="menu-item ${m.available===false?'soldout':''}" onclick="pickItem(this,${i})">
+        <div class="check-icon">✓</div>
+        <div class="item-tag ${m.cat==='Food'?'tag-food':'tag-drink'}">${m.available===false?'Sold out':m.cat}</div>
+        <div class="item-name">${esc(m.name)}</div>
+        <div class="item-price">K${m.price}</div>
+      </div>`).join('');
+  }
+  function pickItem(el,i){ const m = menu[i]; if (m.available===false) { showToast('⛔ '+m.name+' is sold out'); return; } toggleItem(el,m.name,m.price,m.cat); }
+
+  // ── Send tickets straight to Kitchen (food) and Bar (drinks) ──
+  function pushTickets(table, items) {
+    const ts = Date.now();
+    [['Food','scream_kitchen_tickets','kt'],['Drink','scream_bar_tickets','bt']].forEach(([cat,key,p]) => {
+      const names = items.filter(i => i.cat === cat).map(i => i.name);
+      if (!names.length) return;
+      const list = load(key, []);
+      list.unshift({ id: p+'_'+ts, table, items: names, urgent:false, created: ts, timer:'Just now', timerClass:'ok' });
+      save(key, list);
+    });
+  }
+
+  // ── Menu toggle ──
+  function toggleItem(el, name, price, cat) {
+    el.classList.toggle('selected');
+    if (el.classList.contains('selected')) {
+      cart.push({ name, price, cat });
+    } else {
+      const i = cart.findIndex(x => x.name === name);
+      if (i > -1) cart.splice(i, 1);
+    }
+    renderCart();
+  }
+
+  function renderCart() {
+    const summary = document.getElementById('cartSummary');
+    const label   = document.getElementById('cartLabel');
+    const total   = document.getElementById('cartTotal');
+    if (cart.length === 0) { summary.style.display = 'none'; return; }
+    summary.style.display = 'block';
+    label.textContent = cart.map(x => x.name).join(', ');
+    total.textContent = 'K' + cart.reduce((s,x) => s + x.price, 0);
+  }
+
+  // ── Place order ──
+  function placeOrder() {
+    if (cart.length === 0) { showToast('⚠️ Select at least one item first'); return; }
+    const table  = document.getElementById('custTable').value;
+    const method = document.getElementById('custPayment').value;
+    const now    = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+    cart.forEach(item => {
+      if (method === 'tab') balances[table] += item.price;
+      const order = { table, name: item.name, cat: item.cat, method, time: now };
+      orders.unshift(order); // newest first
+    });
+    pushTickets(table, cart);
+    const sales = load('scream_sales', []);
+    cart.forEach(i => sales.push({ ts: Date.now(), table, name: i.name, cat: i.cat, price: i.price, method }));
+    save('scream_sales', sales);
+
+    stats.totalOrders += cart.length;
+    cart = [];
+
+    // Trim to last 50 orders to avoid storage bloat
+    if (orders.length > 50) orders = orders.slice(0, 50);
+
+    save(KEYS.balances, balances);
+    save(KEYS.orders,   orders);
+    save(KEYS.stats,    stats);
+
+    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('selected'));
+    renderCart();
+    renderOrderFeed();
+    updateLedger();
+    updateStats();
+    showToast('✅ Order saved & sent to kitchen!');
+  }
+
+  // ── Render order feed from stored data ──
+  function renderOrderFeed() {
+    const feed = document.getElementById('orderFeed');
+    feed.innerHTML = '';
+    if (orders.length === 0) {
+      feed.innerHTML = '<div class="empty"><span class="icon">⚡</span>No orders yet</div>';
+      return;
+    }
+    orders.forEach((order, idx) => {
+      const li = document.createElement('li');
+      li.className = `feed-item ${order.cat === 'Drink' ? 'drink' : 'food'}`;
+      li.dataset.idx = idx;
+      li.innerHTML = `
+        <div class="feed-meta">
+          <strong>${order.table}</strong> — ${order.name}
+          <br><small>
+            <span class="method-tag ${order.method === 'tab' ? 'method-tab' : 'method-paid'}">${order.method === 'tab' ? 'On Tab' : 'MoMo Paid'}</span>
+            <span style="margin-left:6px;color:var(--muted)">${order.time || ''}</span>
+          </small>
+        </div>
+        <button class="btn btn-sm btn-green" onclick="completeOrder(${idx})">Complete</button>
+      `;
+      feed.appendChild(li);
+    });
+  }
+
+  function completeOrder(idx) {
+    orders.splice(idx, 1);
+    save(KEYS.orders, orders);
+    renderOrderFeed();
+  }
+
+  // ── DJ request ──
+  function sendSongRequest() {
+    const inp   = document.getElementById('songInput');
+    const table = document.getElementById('custTable').value;
+    const val   = inp.value.trim();
+    if (!val) { showToast('⚠️ Enter a track name first'); return; }
+
+    if (load('scream_djpaused', false)) { showToast('⏸ The DJ isn\'t taking requests right now'); return; }
+    const genre = document.getElementById('songGenre').value;
+    const guest = (document.getElementById('guestName').value || '').trim();
+    const ex = djQueue.find(r => r.song.toLowerCase() === val.toLowerCase());
+    if (ex) { ex.votes = (ex.votes || 1) + 1; ex.tables = [...new Set([...(ex.tables || [ex.table]), table])]; }
+    else {
+      if (djQueue.filter(r => r.table === table).length >= 3) { showToast('⏳ 3 requests from your table are already waiting'); return; }
+      djQueue.push({ id: 'dj_' + Date.now(), song: val, table, guest, genre, votes: 1, tables: [table], ts: Date.now() });
+      stats.totalRequests++;
+    }
+    save(KEYS.djQueue, djQueue);
+    save(KEYS.stats,   stats);
+
+    inp.value = '';
+    renderDJFeed();
+    updateStats();
+    showToast('🎵 Song request saved & sent to DJ!');
+  }
+
+  function renderDJFeed() {
+    const feed = document.getElementById('djFeed');
+    feed.innerHTML = '';
+    if (djQueue.length === 0) {
+      feed.innerHTML = '<div class="empty"><span class="icon">🎵</span>No requests yet — queue is empty</div>';
+      return;
+    }
+    djQueue.forEach((req, idx) => {
+      const li = document.createElement('li');
+      li.className = 'feed-item music';
+      li.innerHTML = `
+        <div class="feed-meta">
+          <strong>${esc(req.song)}</strong>
+          <br><small>${req.genre && req.genre !== 'Any' ? req.genre + ' · ' : ''}${(req.tables || [req.table]).join(', ')}${req.votes > 1 ? ' · 🔥 ' + req.votes + ' requests' : ''}</small>
+        </div>
+        <button class="btn btn-sm btn-violet" onclick="playedTrack(${idx})">Played ✓</button>
+      `;
+      feed.appendChild(li);
+    });
+  }
+
+  function playedTrack(idx) {
+    djQueue.splice(idx, 1);
+    stats.totalRequests = Math.max(0, stats.totalRequests - 1);
+    save(KEYS.djQueue, djQueue);
+    save(KEYS.stats,   stats);
+    renderDJFeed();
+    updateStats();
+  }
+
+  // ── Ledger ──
+  function clearTab(table) {
+    balances[table] = 0;
+    save(KEYS.balances, balances);
+    updateLedger();
+    showToast(`✅ ${table} tab cleared & saved`);
+  }
+
+  function updateLedger() {
+    const tbody = document.getElementById('ledgerBody');
+    tbody.innerHTML = '';
+    let total = 0;
+    for (const [table, bal] of Object.entries(balances)) {
+      total += bal;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${table}</strong></td>
+        <td><span class="balance-pill ${bal > 0 ? 'balance-owed' : 'balance-cleared'}">K${bal}</span></td>
+        <td>
+          ${bal > 0
+            ? `<button class="btn btn-sm btn-gold-outline" onclick="clearTab('${table}')">Settle Bill</button>`
+            : `<span style="color:var(--green);font-size:.8rem;font-weight:600;">✔ Cleared</span>`}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+    document.getElementById('statOwed').textContent = 'K' + total;
+  }
+
+  // ── Stats ──
+  function updateStats() {
+    document.getElementById('statOrders').textContent   = stats.totalOrders;
+    document.getElementById('statRequests').textContent = stats.totalRequests;
+  }
+
+  // ── Reset all data (manager action) ──
+  function resetAllData() {
+    if (!confirm('Reset ALL saved data for Scream Club system? This cannot be undone.')) return;
+    Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+    location.reload();
+  }
+
+  // ── Toast ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ── Init: restore everything on page load ──
+  renderMenu();
+  function renderNowPlaying() {
+    const np = load('scream_nowplaying', null), el = document.getElementById('nowPlaying');
+    if (!np) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.innerHTML = '🔊 <span style="color:var(--muted)">Now playing:</span> <strong>' + esc(np.song) + '</strong>';
+  }
+  try { document.getElementById('guestName').value = localStorage.getItem('scream_guest') || ''; } catch {}
+  renderNowPlaying();
+  window.addEventListener('storage', () => {
+    djQueue = load(KEYS.djQueue, []); orders = load(KEYS.orders, []); stats = load(KEYS.stats, stats);
+    Object.assign(balances, load(KEYS.balances, balances));
+    if (cart.length === 0) { menu = load('scream_menu', DEFAULT_MENU); renderMenu(); }
+    renderOrderFeed(); renderDJFeed(); updateLedger(); updateStats(); renderNowPlaying();
+  });
+  renderOrderFeed();
+  renderDJFeed();
+  updateLedger();
+  updateStats();
+
+  // Show a subtle "data restored" indicator if there was saved data
+  window.addEventListener('load', () => {
+    if (orders.length > 0 || djQueue.length > 0 || Object.values(balances).some(b => b > 0)) {
+      showToast('💾 Saved data restored');
+    }
+  });
+</script>
+
+<!-- Reset button (admin use) -->
+<style>
+  .reset-btn {
+    background: transparent;
+    border: 1px solid #3a2a2a;
+    color: #5a4040;
+    font-size: .72rem;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all .2s;
+  }
+  .reset-btn:hover { border-color: var(--red); color: var(--red); }
+  .menu-item.soldout { opacity:.35; cursor:not-allowed; }
+</style>
+</body>
+</html>

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scream Club — Kitchen & Staff Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #07060a;
+      --surface:   #0f0e14;
+      --card:      #141219;
+      --border:    #2a2535;
+      --gold:      #e8a020;
+      --gold-dim:  #7a5010;
+      --amber:     #f97316;
+      --blue:      #4f8ef7;
+      --violet:    #8b5cf6;
+      --green:     #16c784;
+      --red:       #f05d5d;
+      --text:      #ede9f4;
+      --muted:     #7b7490;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 80% 10%, rgba(249,115,22,.06) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 10% 90%, rgba(22,199,132,.05) 0%, transparent 55%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 36px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,9,15,.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo-area { display: flex; align-items: baseline; gap: 14px; }
+    .logo-main {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.85rem; font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 30px rgba(232,160,32,.45);
+    }
+    .logo-sub { font-size: .78rem; font-weight: 500; text-transform: uppercase; letter-spacing: 2.5px; color: var(--muted); }
+
+    .header-badges { display: flex; gap: 10px; align-items: center; }
+    .badge { font-size: .72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 5px 12px; border-radius: 20px; border: 1px solid; }
+    .badge-kitchen { color: var(--amber); border-color: var(--amber); background: rgba(249,115,22,.1); }
+    .badge-v { color: var(--muted); border-color: var(--border); }
+
+    /* ── NAV ── */
+    .nav-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: rgba(10,9,15,.6); padding: 0 36px; position: relative; z-index: 9; }
+    .nav-tab { padding: 14px 22px; font-size: .85rem; font-weight: 600; letter-spacing: .5px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; text-decoration: none; }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+    /* ── MAIN LAYOUT ── */
+    .workspace {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      max-width: 1700px; margin: 0 auto;
+    }
+
+    @media (max-width: 1100px) { .workspace { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 700px)  { .workspace { grid-template-columns: 1fr; } }
+
+    .col {
+      padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 16px;
+      border-right: 1px solid var(--border);
+    }
+    .col:last-child { border-right: none; }
+
+    .col-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .72rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 6px 14px; border-radius: 99px;
+      margin-bottom: 4px;
+    }
+
+    .col-label.kitchen  { background: rgba(249,115,22,.1);  color: var(--amber);  border: 1px solid rgba(249,115,22,.25); }
+    .col-label.bar      { background: rgba(79,142,247,.1);  color: var(--blue);   border: 1px solid rgba(79,142,247,.25); }
+    .col-label.floor    { background: rgba(22,199,132,.1);  color: var(--green);  border: 1px solid rgba(22,199,132,.25); }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+    }
+    .card-title {
+      font-size: .95rem; font-weight: 600; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px; color: var(--text);
+    }
+
+    /* ── TICKET CARDS ── */
+    .ticket {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      animation: slideIn .3s ease;
+      position: relative;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .ticket.urgent { border-color: rgba(240,93,93,.4); background: rgba(240,93,93,.04); }
+    .ticket.normal { border-left: 3px solid var(--amber); }
+    .ticket.bar-order { border-left: 3px solid var(--blue); }
+    .ticket.done { opacity: .4; }
+
+    .ticket-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .ticket-table { font-weight: 700; font-size: .95rem; }
+    .ticket-time {
+      font-family: 'DM Mono', monospace;
+      font-size: .75rem; color: var(--muted);
+    }
+
+    .ticket-time.late { color: var(--red); font-weight: 600; }
+
+    .ticket-items { list-style: none; margin-bottom: 10px; }
+    .ticket-items li {
+      font-size: .85rem; padding: 3px 0;
+      border-bottom: 1px solid rgba(42,37,53,.5);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ticket-items li:last-child { border-bottom: none; }
+    .qty { font-weight: 700; color: var(--gold); font-family: 'DM Mono',monospace; }
+
+    .ticket-actions { display: flex; gap: 8px; }
+
+    /* ── BUTTONS ── */
+    .btn { border: none; border-radius: 8px; font-family: 'DM Sans',sans-serif; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .2s; padding: 7px 14px; }
+    .btn-green  { background: var(--green); color: #000; }
+    .btn-green:hover { filter: brightness(1.1); }
+    .btn-red    { background: var(--red); color: #fff; }
+    .btn-red:hover { filter: brightness(1.1); }
+    .btn-amber  { background: var(--amber); color: #000; }
+    .btn-amber:hover { filter: brightness(1.1); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-outline:hover { border-color: var(--text); color: var(--text); }
+    .btn-primary { background: linear-gradient(135deg,#e8a020,#c47c10); color:#000; font-weight:700; }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-full { width: 100%; padding: 11px; }
+
+    /* ── STAFF TABLE ── */
+    .staff-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .staff-table th { text-align:left; padding:8px 10px; font-size:.68rem; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--border); }
+    .staff-table td { padding:10px 10px; border-bottom:1px solid rgba(42,37,53,.7); }
+    .staff-table tr:last-child td { border-bottom:none; }
+
+    .status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
+    .status-on   { background: var(--green); box-shadow: 0 0 6px rgba(22,199,132,.6); }
+    .status-off  { background: var(--muted); }
+    .status-busy { background: var(--amber); box-shadow: 0 0 6px rgba(249,115,22,.5); animation: pulseDot 1.5s infinite; }
+
+    @keyframes pulseDot {
+      0%,100% { opacity:1; }
+      50%      { opacity:.5; }
+    }
+
+    /* ── TABLE STATUS GRID ── */
+    .table-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .table-card {
+      background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 14px; cursor: pointer; transition: all .2s; position: relative;
+    }
+    .table-card:hover { border-color: #3d3650; }
+    .table-card.occupied { border-color: rgba(249,115,22,.4); background: rgba(249,115,22,.04); }
+    .table-card.vip { border-color: rgba(232,160,32,.4); background: rgba(232,160,32,.04); }
+    .table-card.available { border-color: rgba(22,199,132,.3); background: rgba(22,199,132,.03); }
+
+    .table-name { font-weight: 700; font-size: .9rem; margin-bottom: 4px; }
+    .table-status-label { font-size: .72rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+    .table-card.occupied  .table-status-label { color: var(--amber); }
+    .table-card.vip       .table-status-label { color: var(--gold); }
+    .table-card.available .table-status-label { color: var(--green); }
+    .table-balance { font-family: 'DM Mono',monospace; font-size: .85rem; color: var(--red); margin-top: 6px; font-weight:600; }
+
+    /* ── FORM ── */
+    .field { margin-bottom: 12px; }
+    .field label { display:block; font-size:.7rem; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+    .field input, .field select {
+      width:100%; background:var(--surface); border:1px solid var(--border); border-radius:8px;
+      color:var(--text); padding:10px 12px; font-size:.88rem; font-family:'DM Sans',sans-serif; transition:border-color .2s; appearance:none;
+    }
+    .field input:focus, .field select:focus { outline:none; border-color:var(--gold-dim); }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align:center; padding:24px 0; color:var(--muted); font-size:.85rem; }
+    .empty .icon { font-size:1.8rem; display:block; margin-bottom:6px; opacity:.35; }
+
+    /* ── STAT PILLS ── */
+    .stat-row { display:flex; gap:10px; }
+    .stat-pill { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px; text-align:center; }
+    .stat-pill .val { font-family:'DM Mono',monospace; font-size:1.2rem; font-weight:500; }
+    .stat-pill .lbl { font-size:.68rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-top:2px; }
+
+    /* ── TIMER BADGE ── */
+    .timer { font-family:'DM Mono',monospace; font-size:.72rem; padding:3px 7px; border-radius:5px; font-weight:600; }
+    .timer.ok   { background:rgba(22,199,132,.12); color:var(--green); }
+    .timer.warn { background:rgba(249,115,22,.12); color:var(--amber); }
+    .timer.late { background:rgba(240,93,93,.12); color:var(--red); }
+
+    /* ── TOAST ── */
+    #toast {
+      position:fixed; bottom:28px; left:50%;
+      transform:translateX(-50%) translateY(20px);
+      background:var(--card); border:1px solid var(--amber); border-radius:10px;
+      padding:11px 22px; font-size:.88rem; font-weight:500; color:var(--text);
+      box-shadow:0 8px 32px rgba(0,0,0,.5); opacity:0; transition:all .3s ease;
+      z-index:999; pointer-events:none; white-space:nowrap;
+    }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* ── FOOTER ── */
+    .footer-nav {
+      position:relative; z-index:2;
+      padding:18px 36px; border-top:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+      font-size:.8rem; color:var(--muted);
+    }
+    .page-link { display:inline-flex; align-items:center; gap:7px; font-size:.8rem; font-weight:600; color:var(--gold); text-decoration:none; padding:8px 16px; border:1px solid rgba(232,160,32,.3); border-radius:8px; transition:all .2s; }
+    .page-link:hover { background:rgba(232,160,32,.08); }
+
+    /* ── ADD TICKET FORM ── */
+    .add-ticket-area { background:var(--surface); border:1px dashed var(--border); border-radius:10px; padding:14px; margin-top:4px; }
+    .add-ticket-area.hidden { display:none; }
+
+    .feed-list { list-style:none; max-height:320px; overflow-y:auto; }
+    .feed-list::-webkit-scrollbar { width:4px; }
+    .feed-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+  </style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<header>
+  <div class="logo-area">
+    <span class="logo-main">Scream Club</span>
+    <span class="logo-sub">Kitchen & Staff Portal</span>
+  </div>
+  <div class="header-badges">
+    <span class="badge badge-kitchen">🍳 Staff View</span>
+    <span class="badge badge-v">v2.0</span>
+  </div>
+</header>
+
+<!-- ════ NAV ════ -->
+<nav class="nav-tabs">
+  <a class="nav-tab" href="system.html">← Customer & Operations</a>
+  <span class="nav-tab active">🍳 Kitchen & Staff Portal</span>
+  <a class="nav-tab" href="admin.html">🔐 Admin Control →</a>
+  <a class="nav-tab" href="dj.html">🎧 DJ Booth →</a>
+</nav>
+
+<!-- ════ WORKSPACE (3 columns) ════ -->
+<div class="workspace">
+
+  <!-- ════ COL 1: KITCHEN ════ -->
+  <div class="col">
+    <span class="col-label kitchen">🍳 Kitchen Station</span>
+
+    <!-- Stats -->
+    <div class="stat-row">
+      <div class="stat-pill">
+        <div class="val" id="kitchenPending" style="color:var(--amber)">3</div>
+        <div class="lbl">Pending</div>
+      </div>
+      <div class="stat-pill">
+        <div class="val" id="kitchenDone" style="color:var(--green)">7</div>
+        <div class="lbl">Done Today</div>
+      </div>
+    </div>
+
+    <!-- Active food tickets -->
+    <div class="card">
+      <div class="card-title"><span>🔥</span> Active Food Tickets</div>
+      <div id="kitchenTickets"></div>
+    </div>
+
+    <!-- Manual ticket add -->
+    <div class="card">
+      <div class="card-title"><span>➕</span> Add Kitchen Ticket</div>
+      <div class="field">
+        <label>Table</label>
+        <select id="kt-table">
+          <option>Table 1 — Front Stage</option>
+          <option>Table 2 — VIP Lounge</option>
+          <option>Table 3 — Bar Area</option>
+          <option>Table 4 — Garden Exterior</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Items (comma-separated)</label>
+        <input type="text" id="kt-items" placeholder="e.g. T-Bone Steak, Wings Basket" />
+      </div>
+      <button class="btn btn-primary btn-full" onclick="addKitchenTicket()">Add to Kitchen</button>
+    </div>
+  </div>
+
+  <!-- ════ COL 2: BAR ════ -->
+  <div class="col">
+    <span class="col-label bar">🍻 Bar Station</span>
+
+    <!-- Stats -->
+    <div class="stat-row">
+      <div class="stat-pill">
+        <div class="val" id="barPending" style="color:var(--blue)">2</div>
+        <div class="lbl">Pending</div>
+      </div>
+      <div class="stat-pill">
+        <div class="val" id="barDone" style="color:var(--green)">14</div>
+        <div class="lbl">Served Today</div>
+      </div>
+    </div>
+
+    <!-- Active drink tickets -->
+    <div class="card">
+      <div class="card-title"><span>🍺</span> Active Drink Orders</div>
+      <div id="barTickets"></div>
+    </div>
+
+    <!-- Add drink ticket -->
+    <div class="card">
+      <div class="card-title"><span>➕</span> Add Bar Order</div>
+      <div class="field">
+        <label>Table</label>
+        <select id="bt-table">
+          <option>Table 1 — Front Stage</option>
+          <option>Table 2 — VIP Lounge</option>
+          <option>Table 3 — Bar Area</option>
+          <option>Table 4 — Garden Exterior</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Drinks (comma-separated)</label>
+        <input type="text" id="bt-items" placeholder="e.g. 2× Mosi Lager, Jameson Shot" />
+      </div>
+      <button class="btn btn-primary btn-full" onclick="addBarTicket()">Add to Bar</button>
+    </div>
+
+    <!-- Low stock alerts -->
+    <div class="card">
+      <div class="card-title"><span>⚠️</span> Stock Alerts</div>
+      <ul class="feed-list" id="stockAlerts">
+        <li class="ticket" style="border-left:3px solid var(--red); margin-bottom:8px;">
+          <div class="feed-meta" style="font-size:.85rem;">
+            <strong style="color:var(--red);">Jameson 750ml</strong> — Only 1 bottle left
+          </div>
+        </li>
+        <li class="ticket" style="border-left:3px solid var(--amber); margin-bottom:8px;">
+          <div class="feed-meta" style="font-size:.85rem;">
+            <strong style="color:var(--amber);">Mosi Lager</strong> — 6 cans remaining
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ════ COL 3: FLOOR STAFF ════ -->
+  <div class="col">
+    <span class="col-label floor">🏃 Floor Operations</span>
+
+    <!-- Table Status -->
+    <div class="card">
+      <div class="card-title"><span>🗺️</span> Table Status</div>
+      <div class="table-grid">
+        <div class="table-card occupied" onclick="toggleTableStatus(this)">
+          <div class="table-name">Table 1</div>
+          <div style="font-size:.7rem;color:var(--muted);">Front Stage</div>
+          <div class="table-status-label">Occupied</div>
+          <div class="table-balance">K0 owed</div>
+        </div>
+        <div class="table-card vip" onclick="toggleTableStatus(this)">
+          <div class="table-name">Table 2</div>
+          <div style="font-size:.7rem;color:var(--muted);">VIP Lounge</div>
+          <div class="table-status-label">VIP — Occupied</div>
+          <div class="table-balance">K245 owed</div>
+        </div>
+        <div class="table-card available" onclick="toggleTableStatus(this)">
+          <div class="table-name">Table 3</div>
+          <div style="font-size:.7rem;color:var(--muted);">Bar Area</div>
+          <div class="table-status-label">Available</div>
+          <div class="table-balance"></div>
+        </div>
+        <div class="table-card occupied" onclick="toggleTableStatus(this)">
+          <div class="table-name">Table 4</div>
+          <div style="font-size:.7rem;color:var(--muted);">Garden Exterior</div>
+          <div class="table-status-label">Occupied</div>
+          <div class="table-balance">K590 owed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Staff on duty -->
+    <div class="card">
+      <div class="card-title"><span>👥</span> Staff On Duty</div>
+      <table class="staff-table">
+        <thead>
+          <tr><th>Name</th><th>Role</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Emmanuel</strong></td>
+            <td style="color:var(--muted)">Waiter</td>
+            <td><span class="status-dot status-on"></span><span style="font-size:.78rem;color:var(--green)">On Floor</span></td>
+          </tr>
+          <tr>
+            <td><strong>Miriam</strong></td>
+            <td style="color:var(--muted)">Bartender</td>
+            <td><span class="status-dot status-busy"></span><span style="font-size:.78rem;color:var(--amber)">At Bar</span></td>
+          </tr>
+          <tr>
+            <td><strong>Moses</strong></td>
+            <td style="color:var(--muted)">Cook</td>
+            <td><span class="status-dot status-busy"></span><span style="font-size:.78rem;color:var(--amber)">In Kitchen</span></td>
+          </tr>
+          <tr>
+            <td><strong>Grace</strong></td>
+            <td style="color:var(--muted)">Cashier</td>
+            <td><span class="status-dot status-on"></span><span style="font-size:.78rem;color:var(--green)">At Till</span></td>
+          </tr>
+          <tr>
+            <td><strong>DJ Blaze</strong></td>
+            <td style="color:var(--muted)">DJ</td>
+            <td><span class="status-dot status-on"></span><span style="font-size:.78rem;color:var(--green)">On Stage</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Internal notes / announcements -->
+    <div class="card">
+      <div class="card-title"><span>📢</span> Staff Announcements</div>
+      <div id="notesFeed" style="margin-bottom:12px;"></div>
+      <div class="field" style="margin-bottom:8px;">
+        <input type="text" id="noteInput" placeholder="Post announcement to all staff…" />
+      </div>
+      <button class="btn btn-primary btn-full" onclick="postNote()">📢 Broadcast</button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ════ FOOTER ════ -->
+<footer class="footer-nav">
+  <span>Scream Club — Kitchen & Staff Portal &nbsp;
+    <button class="reset-btn" onclick="resetKitchenData()">🗑 Reset All Data</button>
+  </span>
+  <a href="system.html" class="page-link">← Back to Customer & Operations</a>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+  // ════════════════════════════════════════════
+  //  SCREAM CLUB KITCHEN PORTAL — localStorage Persistence
+  //  All tickets, table states, notes, and
+  //  counters survive page refresh.
+  // ════════════════════════════════════════════
+
+  const KEYS = {
+    kitchen:  'scream_kitchen_tickets',   // array of ticket objects
+    bar:      'scream_bar_tickets',       // array of ticket objects
+    tables:   'scream_table_statuses',    // { "Table 1": "occupied", ... }
+    notes:    'scream_staff_notes',       // array of { text, time }
+    kstats:   'scream_kitchen_stats',     // { done, pending }
+    bstats:   'scream_bar_stats',         // { done, pending }
+  };
+
+  function load(key, fallback) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+  }
+  function save(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+
+  // ── State (restored from storage) ──
+  let kitchenTickets = load(KEYS.kitchen, [
+    { id:'kt1', table:'Table 4', items:['T-Bone Steak','Wings Basket'], urgent:true,  timer:'12 min', timerClass:'late' },
+    { id:'kt2', table:'Table 1', items:['Chicken & Chips','Chicken & Chips'], urgent:false, timer:'6 min',  timerClass:'warn' },
+    { id:'kt3', table:'Table 2', items:['T-Bone Steak'], urgent:true,  timer:'18 min', timerClass:'late' },
+  ]);
+
+  let barTickets = load(KEYS.bar, [
+    { id:'bt1', table:'Table 2', items:['2× Mosi Lager','1× Jameson Shot'], timer:'2 min', timerClass:'ok' },
+    { id:'bt2', table:'Table 3', items:['3× Smirnoff & Coke'], timer:'7 min', timerClass:'warn' },
+  ]);
+
+  const tableStatusDefaults = { "Table 1":"occupied","Table 2":"vip","Table 3":"available","Table 4":"occupied" };
+  const tableStatuses = load(KEYS.tables, tableStatusDefaults);
+
+  const tableLabels = { available:'Available', occupied:'Occupied', vip:'VIP — Occupied' };
+
+  let notes = load(KEYS.notes, [
+    { text: 'Table 2 VIP guests — priority service tonight.', time: '8:04 PM', role: 'Manager', color: 'var(--gold)' },
+    { text: 'T-Bone steak taking longer — 5 extra mins.', time: '8:15 PM', role: 'Kitchen', color: 'var(--amber)' },
+  ]);
+
+  let kStats = load(KEYS.kstats, { done: 7, pending: 3 });
+  let bStats = load(KEYS.bstats, { done: 14, pending: 2 });
+
+  // ── Render kitchen tickets ──
+  function renderKitchenTickets() {
+    const div = document.getElementById('kitchenTickets');
+    div.innerHTML = '';
+    document.getElementById('kitchenPending').textContent = kitchenTickets.length;
+    document.getElementById('kitchenDone').textContent = kStats.done;
+    if (kitchenTickets.length === 0) {
+      div.innerHTML = '<div class="empty"><span class="icon">✅</span>All caught up — no pending tickets</div>';
+      return;
+    }
+    kitchenTickets.forEach((t, idx) => {
+      const el = document.createElement('div');
+      el.className = `ticket ${(t.urgent || lt.cls==='late') ? 'urgent' : 'normal'}`;
+      el.id = t.id;
+      const lt = liveTimer(t);
+      const rows = t.items.map(i => `<li><span class="qty">1×</span> ${i}</li>`).join('');
+      el.innerHTML = `
+        <div class="ticket-header">
+          <span class="ticket-table">${t.table}${t.urgent ? ' 🔴' : ''}</span>
+          <span class="timer ${lt.cls}">${lt.timer}</span>
+        </div>
+        <ul class="ticket-items">${rows}</ul>
+        <div class="ticket-actions">
+          <button class="btn btn-green" onclick="completeKitchen(${idx})">✓ Done</button>
+          <button class="btn btn-amber" onclick="flagKitchen(${idx})">⚑ Urgent</button>
+        </div>
+      `;
+      div.appendChild(el);
+    });
+    document.getElementById('kitchenPending').textContent = kitchenTickets.length;
+    document.getElementById('kitchenDone').textContent    = kStats.done;
+  }
+
+  function completeKitchen(idx) {
+    const el = document.getElementById(kitchenTickets[idx].id);
+    if (el) { el.classList.add('done'); setTimeout(() => renderKitchenTickets(), 500); }
+    kitchenTickets.splice(idx, 1);
+    kStats.done++;
+    kStats.pending = Math.max(0, kStats.pending - 1);
+    save(KEYS.kitchen, kitchenTickets);
+    save(KEYS.kstats, kStats);
+    showToast('✅ Kitchen ticket complete & saved');
+  }
+
+  function flagKitchen(idx) {
+    kitchenTickets[idx].urgent = true;
+    save(KEYS.kitchen, kitchenTickets);
+    renderKitchenTickets();
+    showToast('⚑ Ticket flagged as urgent');
+  }
+
+  function addKitchenTicket() {
+    const table = document.getElementById('kt-table').value.split(' — ')[0];
+    const items = document.getElementById('kt-items').value.trim();
+    if (!items) { showToast('⚠️ Enter item names'); return; }
+    const ticket = {
+      id: 'kt_' + Date.now(), created: Date.now(),
+      table,
+      items: items.split(',').map(s => s.trim()),
+      urgent: false,
+      timer: 'Just now',
+      timerClass: 'ok'
+    };
+    kitchenTickets.unshift(ticket);
+    kStats.pending++;
+    save(KEYS.kitchen, kitchenTickets);
+    save(KEYS.kstats, kStats);
+    document.getElementById('kt-items').value = '';
+    renderKitchenTickets();
+    showToast('🍳 Kitchen ticket saved');
+  }
+
+  // ── Render bar tickets ──
+  function renderBarTickets() {
+    const div = document.getElementById('barTickets');
+    div.innerHTML = '';
+    document.getElementById('barPending').textContent = barTickets.length;
+    document.getElementById('barDone').textContent = bStats.done;
+    if (barTickets.length === 0) {
+      div.innerHTML = '<div class="empty"><span class="icon">🍺</span>No pending bar orders</div>';
+      return;
+    }
+    barTickets.forEach((t, idx) => {
+      const el = document.createElement('div');
+      el.className = 'ticket bar-order';
+      el.id = t.id;
+      const lt = liveTimer(t);
+      const rows = t.items.map(i => `<li><span class="qty">—</span> ${i}</li>`).join('');
+      el.innerHTML = `
+        <div class="ticket-header">
+          <span class="ticket-table">${t.table}</span>
+          <span class="timer ${lt.cls}">${lt.timer}</span>
+        </div>
+        <ul class="ticket-items">${rows}</ul>
+        <div class="ticket-actions">
+          <button class="btn btn-green" onclick="completeBar(${idx})">✓ Served</button>
+        </div>
+      `;
+      div.appendChild(el);
+    });
+    document.getElementById('barPending').textContent = barTickets.length;
+    document.getElementById('barDone').textContent    = bStats.done;
+  }
+
+  function completeBar(idx) {
+    const el = document.getElementById(barTickets[idx].id);
+    if (el) { el.classList.add('done'); setTimeout(() => renderBarTickets(), 500); }
+    barTickets.splice(idx, 1);
+    bStats.done++;
+    bStats.pending = Math.max(0, bStats.pending - 1);
+    save(KEYS.bar, barTickets);
+    save(KEYS.bstats, bStats);
+    showToast('✅ Bar order served & saved');
+  }
+
+  function addBarTicket() {
+    const table = document.getElementById('bt-table').value.split(' — ')[0];
+    const items = document.getElementById('bt-items').value.trim();
+    if (!items) { showToast('⚠️ Enter drink names'); return; }
+    const ticket = {
+      id: 'bt_' + Date.now(), created: Date.now(),
+      table,
+      items: items.split(',').map(s => s.trim()),
+      timer: 'Just now',
+      timerClass: 'ok'
+    };
+    barTickets.unshift(ticket);
+    bStats.pending++;
+    save(KEYS.bar, barTickets);
+    save(KEYS.bstats, bStats);
+    document.getElementById('bt-items').value = '';
+    renderBarTickets();
+    showToast('🍺 Bar order saved');
+  }
+
+  // ── Table status (click to cycle, auto-saved) ──
+  function toggleTableStatus(card) {
+    const name = card.querySelector('.table-name').textContent;
+    const states = ['available','occupied','vip'];
+    const current = states.find(s => card.classList.contains(s)) || 'available';
+    const next = states[(states.indexOf(current) + 1) % states.length];
+    states.forEach(s => card.classList.remove(s));
+    card.classList.add(next);
+    card.querySelector('.table-status-label').textContent = tableLabels[next];
+    tableStatuses[name] = next;
+    save(KEYS.tables, tableStatuses);
+    showToast(`${name} → ${tableLabels[next]} (saved)`);
+  }
+
+  function restoreTableStatuses() {
+    document.querySelectorAll('.table-card').forEach(card => {
+      const name = card.querySelector('.table-name').textContent;
+      const status = tableStatuses[name];
+      if (!status) return;
+      const states = ['available','occupied','vip'];
+      states.forEach(s => card.classList.remove(s));
+      card.classList.add(status);
+      card.querySelector('.table-status-label').textContent = tableLabels[status];
+    });
+  }
+
+  // ── Notes / Announcements ──
+  function renderNotes() {
+    const feed = document.getElementById('notesFeed');
+    feed.innerHTML = '';
+    notes.slice().reverse().forEach((n, i) => {
+      const el = document.createElement('div');
+      el.className = 'ticket';
+      el.style.cssText = 'margin-bottom:8px; font-size:.85rem;';
+      el.innerHTML = `
+        <strong style="color:${n.color || 'var(--blue)'};">${n.role || 'Staff'}:</strong> ${n.text}
+        <div style="margin-top:3px;font-size:.72rem;color:var(--muted);">${n.time}</div>
+      `;
+      feed.appendChild(el);
+    });
+  }
+
+  function postNote() {
+    const input = document.getElementById('noteInput');
+    const val   = input.value.trim();
+    if (!val) return;
+    const now = new Date().toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+    notes.push({ text: val, time: now, role: 'Staff', color: 'var(--blue)' });
+    if (notes.length > 30) notes = notes.slice(-30); // keep last 30
+    save(KEYS.notes, notes);
+    input.value = '';
+    renderNotes();
+    showToast('📢 Announcement saved & broadcast');
+  }
+
+  // ── Timers: minutes since order, turns amber at 8 min, red at 15 ──
+  function liveTimer(t) {
+    if (!t.created) return { timer: t.timer, cls: t.timerClass };
+    const m = Math.floor((Date.now() - t.created) / 60000);
+    return { timer: m < 1 ? 'Just now' : m + ' min', cls: m < 8 ? 'ok' : m < 15 ? 'warn' : 'late' };
+  }
+  function renderBalances() {
+    const b = load('scream_balances', {});
+    document.querySelectorAll('.table-card').forEach(c => {
+      const v = b[c.querySelector('.table-name').textContent];
+      c.querySelector('.table-balance').textContent = v > 0 ? 'K' + v + ' owed' : '';
+    });
+  }
+  function beep() {
+    try { const a = new (window.AudioContext||window.webkitAudioContext)(), o = a.createOscillator(); o.frequency.value = 880; o.connect(a.destination); o.start(); setTimeout(() => { o.stop(); a.close(); }, 250); } catch {}
+  }
+
+  // ── Reset ──
+  function resetKitchenData() {
+    if (!confirm('Reset all kitchen portal saved data?')) return;
+    Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+    location.reload();
+  }
+
+  // ── Toast ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ── Init: restore all state on page load ──
+  renderKitchenTickets();
+  renderBarTickets();
+  restoreTableStatuses();
+  renderNotes();
+  renderBalances();
+  // Live timers + live balances refresh every 30s
+  setInterval(() => { renderKitchenTickets(); renderBarTickets(); renderBalances(); }, 30000);
+  // New orders from the customer page arrive instantly (same device/browser) with a beep
+  window.addEventListener('storage', () => {
+    const before = kitchenTickets.length + barTickets.length;
+    kitchenTickets = load(KEYS.kitchen, []); barTickets = load(KEYS.bar, []);
+    kStats = load(KEYS.kstats, kStats); bStats = load(KEYS.bstats, bStats); notes = load(KEYS.notes, notes);
+    renderKitchenTickets(); renderBarTickets(); renderNotes(); renderBalances();
+    if (kitchenTickets.length + barTickets.length > before) { beep(); showToast('🔔 New order received'); }
+  });
+
+  window.addEventListener('load', () => {
+    const hasData = kitchenTickets.length || barTickets.length || notes.length > 2;
+    if (hasData) showToast('💾 Saved data restored');
+  });
+</script>
+
+<style>
+  .reset-btn { background:transparent; border:1px solid #3a2a2a; color:#5a4040; font-size:.72rem; padding:5px 12px; border-radius:6px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s; }
+  .reset-btn:hover { border-color:var(--red); color:var(--red); }
+</style>
+</body>
+</html>
